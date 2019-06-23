@@ -18,4 +18,4 @@ change termsrv.dll with your full path , ex : C:\Users\comix\Downloads\termsrv.d
 
 <h2>License</h2>
 
-Copyright © 2015 Soufiyan Ak (Comix)
+Copyright © 2019 Soufiyan Ak (Comix)
