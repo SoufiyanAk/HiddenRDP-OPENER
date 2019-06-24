@@ -25,10 +25,11 @@ To
 <h4>REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v Hidden /t REG_DWORD /d 0X00000001 /f</h4>
 then you will be able to see your hidden profil
 And change this line 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0X00000000 /f
+<h4>reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0X00000000 /f </h4>
 to
+<h4>
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0X00000001 /f
-
+<h4>
 <h2>License</h2>
 
 Copyright © 2019 Soufiyan Ak (Comix)
