@@ -1,212 +1,245 @@
-# HiddenRDP-OPENER v2.0
+# HiddenRDP-OPENER v2.1 - Script Generator
 
-A comprehensive script for managing Remote Desktop Protocol (RDP) configuration on Windows systems with full installation and rollback capabilities.
+A versatile RDP configuration tool that generates different types of scripts based on your needs - from completely silent/hidden operations to full logging versions.
 
-> **⚠️ Security Notice**: This script creates administrative accounts and modifies system files. Use only on systems you own or have explicit authorization to modify. Always follow your organization's security policies and change default passwords immediately.
-
----
-
-## 🚀 New Features in v2.0
-
-- **Interactive Menu System**: Easy-to-use menu for installation, rollback, and status checking
-- **Complete Rollback Functionality**: Safely undo all changes made by the script
-- **Enhanced Backup System**: Automatic backup of registry settings and system files
-- **Status Monitoring**: View current RDP configuration and backup status
-- **Improved Logging**: Comprehensive logging of all operations
-- **Error Handling**: Better error detection and user feedback
+> **👨‍👩‍👧‍👦 Parental Control Notice**: This tool is designed for legitimate parental monitoring and system administration. The silent mode allows parents to monitor children's online activities discretely for safety purposes.
 
 ---
 
-## 🎯 Requirements
+## 🎯 Key Features
 
-- **Supported Operating Systems:**
-  - Windows 7
-  - Windows 8/8.1
-  - Windows 10
-  - Windows 11
-  - *Note: Administrator privileges required*
+### **Script Generation Modes:**
 
----
+#### 1. **🤫 Silent/Hidden Script** - Perfect for Parental Control
+- **Zero output** - completely invisible operation
+- **No logs or traces** - runs without any visible indication
+- **Instant execution** - one-click RDP access
+- **Hidden admin account** - invisible in login screen
+- **Ideal for parents** monitoring children's computer usage
 
-## 📋 How It Works
+#### 2. **📋 Normal Script** - Full Documentation
+- Complete logging and progress feedback
+- File backups and detailed reports
+- Error handling and status messages
+- Professional system administration
 
-The script provides four main functions through an interactive menu:
-
-### 1. **Install/Configure RDP**
-- Creates a temporary administrative account with secure settings
-- Enables RDP connections through registry modifications
-- Backs up original system files and registry settings
-- Configures user visibility settings
-- Deploys modified `termsrv.dll` (if available)
-
-### 2. **Rollback/Uninstall**
-- Removes the temporary administrative account
+#### 3. **🔄 Rollback Script** - Clean Removal
+- Removes all traces of RDP configuration
 - Disables RDP connections
-- Restores original system files from backups
-- Cleans up registry modifications
-- Maintains system integrity
+- Deletes created accounts
+- Restores original system files
 
-### 3. **View Status**
-- Shows current RDP configuration status
-- Lists existing temporary accounts
-- Displays available backup files
-- Provides system overview
-
-### 4. **Exit**
-- Safely exits the script
+#### 4. **⚡ Direct Operations** - Immediate Execution
+- Install or rollback in the current session
+- No additional files created
+- Quick testing and temporary access
 
 ---
 
-## 🔧 Installation & Usage
+## 🚀 Quick Start Guide
 
-### Step 1: Prepare Files
-1. Download `RDPScript.bat` and `termsrv.dll` (if needed)
-2. Place both files in the same directory on the target system
-3. Right-click on `RDPScript.bat` and select "Run as Administrator"
-
-### Step 2: Configure Settings (Optional)
-Before running, you can customize these variables in the script:
-```batch
-SET TEMP_USER=RDPTempAdmin          # Change username
-SET TEMP_PASSWORD=#SecureTempPwd123! # Change password (IMPORTANT!)
-```
-
-### Step 3: Run the Script
-1. Execute `RDPScript.bat` as Administrator
-2. Select option [1] to install RDP configuration
-3. Follow the on-screen prompts
-4. **Important**: Change the temporary password immediately after installation
-
----
-
-## 🔄 Rollback Process
-
-To completely remove all changes:
+### For Parents (Silent Mode):
 1. Run `RDPScript.bat` as Administrator
-2. Select option [2] for rollback
-3. Confirm the rollback when prompted
-4. The script will automatically:
-   - Remove temporary accounts
-   - Disable RDP connections
-   - Restore original files
-   - Clean registry entries
+2. Choose option **[1] Generate Silent/Hidden Script**
+3. Set username and password (or use defaults)
+4. Copy the generated `RDP_Silent.bat` to target computer
+5. Run `RDP_Silent.bat` as Administrator - **it will execute silently with no indication**
+6. Access the computer via RDP using the hidden account
+
+### For System Administrators (Normal Mode):
+1. Run `RDPScript.bat` as Administrator
+2. Choose option **[2] Generate Normal Script**
+3. Configure username and password
+4. Use the generated `RDP_Normal.bat` for documented installation
 
 ---
 
-## 📊 Status Monitoring
+## 📋 Requirements
 
-Use option [3] to check:
-- Current RDP enable/disable status
-- Temporary account existence
-- Available backup files
-- System configuration overview
+- **Operating Systems:** Windows 7, 8, 10, 11
+- **Privileges:** Administrator access required
+- **Use Case:** Legitimate system administration or parental monitoring
 
 ---
 
-## 🛡️ Security Considerations
+## 🔧 Detailed Usage
 
-### Best Practices:
+### 🤫 Silent Script Generation
+```
+Username: WindowsUser (default)
+Password: Pass123! (default)
+File: RDP_Silent.bat
+
+Features:
+✓ No console output whatsoever
+✓ No log files created
+✓ No visible progress indicators
+✓ Hidden administrative account
+✓ Automatic service restart
+✓ Silent exit after completion
+```
+
+### 📋 Normal Script Generation  
+```
+Username: RDPAdmin (default)
+Password: SecurePass123! (default)
+File: RDP_Normal.bat
+
+Features:
+✓ Progress messages and status updates
+✓ Detailed log file creation
+✓ System file backups
+✓ Error handling and reporting
+✓ Completion summary display
+```
+
+### 🔄 Rollback Script
+```
+File: RDP_Rollback.bat
+
+Features:
+✓ Disables RDP connections
+✓ Removes ALL created accounts (WindowsUser, RDPAdmin, etc.)
+✓ Cleans registry entries
+✓ Restores original system files
+✓ Complete system cleanup
+```
+
+---
+
+## 🛡️ Security & Ethics
+
+### ✅ Legitimate Uses:
+- **Parental monitoring** of children's computer activity
+- **System administration** in corporate environments  
+- **Remote support** for family members
+- **Personal computer management** across multiple devices
+
+### ⚠️ Important Security Notes:
 - **Change default passwords immediately** after installation
-- **Use strong, unique passwords** for temporary accounts
-- **Remove temporary accounts** when no longer needed
-- **Run rollback** to clean up when finished
-- **Monitor system logs** for any unusual activity
+- **Use only on computers you own** or have explicit permission to access
+- **Inform users** when appropriate (except for parental monitoring of minors)
+- **Run rollback scripts** when access is no longer needed
+- **Monitor accounts** for any unauthorized usage
 
-### Default Credentials (CHANGE THESE!):
-- Username: `RDPTempAdmin`
-- Password: `#SecureTempPwd123!`
-
----
-
-## 📁 File Structure
-
-```
-project/
-├── RDPScript.bat       # Main script with menu system
-├── termsrv.dll         # Modified terminal services DLL (optional)
-└── README.md          # This documentation
-```
+### 👨‍👩‍👧‍👦 For Parents:
+The silent mode is specifically designed for parents who need to monitor their children's online activities for safety reasons. The hidden account allows parents to:
+- Check browsing history and installed software
+- Monitor online communications for safety
+- Ensure children are following internet usage rules
+- Provide remote technical support
 
 ---
 
-## 📝 Logging & Backups
+## 📁 Generated Files
 
-The script creates several backup and log files:
+| File | Purpose | Visibility | Logs |
+|------|---------|------------|------|
+| `RDP_Silent.bat` | Stealth installation | None | None |
+| `RDP_Normal.bat` | Standard installation | Full | Yes |
+| `RDP_Rollback.bat` | Complete removal | Minimal | None |
 
-### Log Files:
-- `C:\RDP_Config_YYYYMMDD.log` - Operation logs
+---
 
-### Backup Files:
-- `C:\Windows_System32_Backup_HHMMSS\` - System file backups
-- `C:\RDP_Registry_Backup_YYYYMMDD.reg` - Registry backups
+## 🔍 Default Credentials
+
+### Silent Script:
+- **Username:** `WindowsUser`
+- **Password:** `Pass123!`
+
+### Normal Script:
+- **Username:** `RDPAdmin`  
+- **Password:** `SecurePass123!`
+
+> **🔒 CRITICAL:** These are default credentials - **change them immediately** for security!
+
+---
+
+## 🎮 Step-by-Step: Parental Control Setup
+
+### Initial Setup (One-time):
+1. **Download** the script generator to your computer
+2. **Run as Administrator:** Right-click → "Run as administrator"
+3. **Select [1]** for Silent/Hidden Script
+4. **Choose username/password** (write them down safely)
+5. **Generated file:** `RDP_Silent.bat` is created
+
+### Deployment (On child's computer):
+1. **Copy** `RDP_Silent.bat` to the child's computer
+2. **Right-click → Run as administrator** (requires admin access once)
+3. **No visible output** - script runs completely silently
+4. **RDP is now enabled** with hidden account
+
+### Remote Access:
+1. **Open Remote Desktop** on your computer
+2. **Connect to child's computer** IP address
+3. **Login with:** username and password you set
+4. **Monitor safely** - account is invisible to child
+
+### Cleanup (When no longer needed):
+1. **Generate rollback script** from main generator
+2. **Run rollback** on child's computer to remove all traces
 
 ---
 
 ## ❓ Troubleshooting
 
-### Common Issues:
+### Silent Script Issues:
+- **No visible errors:** Check Windows Event Viewer for system errors
+- **RDP not working:** Verify Windows Firewall allows RDP connections
+- **Access denied:** Ensure script was run as Administrator
 
-**"Access Denied" Error:**
-- Ensure you're running as Administrator
-- Check Windows UAC settings
+### Connection Problems:
+- **Can't connect:** Check IP address and network connectivity
+- **Login failed:** Verify username/password are correct
+- **Account not found:** Script may have failed - try normal mode for debugging
 
-**DLL Deployment Failed:**
-- Verify `termsrv.dll` exists in the same directory
-- Check file permissions
-- Ensure no antivirus interference
-
-**User Account Creation Failed:**
-- Check password complexity requirements
-- Verify account naming conventions
-- Review local security policies
-
-**Rollback Issues:**
-- Ensure backup files exist before rolling back
-- Run as Administrator
-- Check log files for specific errors
+### Cleanup Issues:
+- **Account still visible:** Run rollback script as Administrator
+- **RDP still enabled:** Manually disable in System Properties → Remote
 
 ---
 
-## 🔧 Advanced Configuration
-
-### Custom User Account:
-```batch
-SET TEMP_USER=YourCustomUsername
-SET TEMP_PASSWORD=YourSecurePassword123!
+## 📄 File Structure
 ```
-
-### Custom Backup Location:
-```batch
-SET BACKUP_DIR=D:\CustomBackupPath
+project/
+├── RDPScript.bat           # Main script generator
+├── termsrv.dll            # Modified DLL (optional)
+├── README.md              # This documentation
+└── generated/             # Generated scripts appear here
+    ├── RDP_Silent.bat     # Silent installation
+    ├── RDP_Normal.bat     # Normal installation  
+    └── RDP_Rollback.bat   # Cleanup script
 ```
-
----
-
-## 📜 License
-
-This project is open source and free to use with no conditions.
-
-**Copyright © 2019-2025 Soufiyan AKAABOUB**  
-All rights reserved.
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+This project welcomes contributions for:
+- Additional security features
+- Better error handling
+- Support for more Windows versions
+- Enhanced stealth capabilities
+- Improved parental control features
 
 ---
 
-## ⚠️ Disclaimer
+## 📜 License & Disclaimer
 
-This software is provided "as is" without warranty. Users are responsible for:
-- Compliance with local laws and regulations
-- System security and integrity
-- Proper authorization before use
-- Regular security audits
+**Open source and free to use for legitimate purposes.**
 
-**Use at your own risk and only on systems you own or have explicit permission to modify.**
+### Legal Notice:
+- **Permitted:** Parental monitoring of minor children
+- **Permitted:** Administration of owned systems
+- **Permitted:** Authorized corporate IT management
+- **Prohibited:** Unauthorized access to systems
+- **Prohibited:** Violating privacy laws or regulations
+
+**Copyright © 2019-2025 Soufiyan AKAABOUB**
+
+---
+
+## ⚠️ Final Warning
+
+**Use responsibly and legally.** This tool is designed for legitimate system administration and parental monitoring purposes. Users are fully responsible for compliance with local laws, regulations, and ethical guidelines. The authors assume no responsibility for misuse.
